@@ -1,0 +1,19 @@
+<configuration>
+    <property name="LOG_DIR" value="${user.dir}"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/bioanalyst.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/bioanalyst.%d{yyyy-MM-dd}.gz</fileNamePattern>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%date %-5level %logger %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
