@@ -5,11 +5,16 @@ import lombok.Data;
 @Data
 public class WorkerStatus {
 
+    private final long id;
     private volatile boolean running;
     private volatile boolean cancelled;
     private volatile long processed;
     private volatile long total;
     private volatile String message;
+
+    public WorkerStatus(long id) {
+        this.id = id;
+    }
 
     public String getProgressInfo() {
         long proc = getProcessed();

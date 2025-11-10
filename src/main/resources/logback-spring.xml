@@ -1,5 +1,6 @@
 <configuration>
-    <property name="LOG_DIR" value="${user.dir}"/>
+<!--    <property name="LOG_DIR" value="${user.dir}"/>-->
+     <property name="LOG_DIR" value="."/>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/bioanalyst.log</file>

@@ -1,55 +1,131 @@
 package hr.ja.ba;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 
-import java.io.File;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
+
+import static org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME;
 
 @Slf4j
 @ShellComponent
 @RequiredArgsConstructor
-@Data
 public class WorkerManager {
 
+    private final Map<String, WorkerHolder> workers = new ConcurrentHashMap<>();
 
-    private Map<String, WorkerHolder> workers = new ConcurrentHashMap<>();
+    private final Map<String, AbstractWorker> availableWorkers;
 
-    private final WorkerStatus status = new WorkerStatus();
+    @Qualifier(APPLICATION_TASK_EXECUTOR_BEAN_NAME)
+    private final AsyncTaskExecutor taskExecutor;
 
-    @ShellMethod(key = "start")
-    public String start(String workerName) {
-        // start async worker as callable task and return immediately
-        // callable with finish status update
-        return "...";
+    @ShellMethod(key = "start", value = "Start a specific worker in background")
+    public String start(@ShellOption String workerName) {
+        AbstractWorker worker = availableWorkers.get(workerName);
+        if (worker == null) {
+            return "Unknown worker: " + workerName;
+        }
+
+        WorkerHolder existing = workers.get(getWorkerName(workerName));
+        if (existing != null && existing.isActive()) {
+            return "Worker " + workerName + " already running.";
+        }
+
+        worker.reset();
+        workers.remove(workerName);
+        WorkerHolder holder = new WorkerHolder(workerName, worker, Instant.now());
+        Future<?> future = taskExecutor.submit(() -> {
+            try {
+                worker.run();
+            } finally {
+                holder.markFinished();
+                log.info("Worker {} finished.", workerName);
+            }
+        });
+        holder.attachFuture(future);
+        workers.put(workerName, holder);
+        log.info("Started worker: {}", workerName);
+        return "Started worker: " + workerName;
     }
 
-    @ShellMethod(key = "stop")
-    public String stop(String workerName) {
-        return "...";
+    private String lastWorkerName = null;
+
+    private String getWorkerName(String workerName) {
+        if (workerName == null) {
+            if (lastWorkerName == null) {
+                throw new IllegalArgumentException("Worker name must be provided at least once.");
+            }
+            return lastWorkerName;
+        }
+        lastWorkerName = workerName;
+        return workerName;
     }
 
-    @ShellMethod(key = "status")
-    public String status(String workerName) {
+    @ShellMethod(key = "stop", value = "Stop a specific worker")
+    public String stop(@ShellOption(defaultValue = ShellOption.NULL) String workerName) {
+        workerName = getWorkerName(workerName);
+        WorkerHolder holder = workers.get(workerName);
+        if (holder == null || holder.getFuture() == null) {
+            return "Worker " + workerName + " nije pokrenut.";
+        }
 
-        return "...";
+        holder.getWorker().cancel();
+        boolean interrupted = holder.getFuture().cancel(true);
+        log.info("Stopped worker: {}", workerName);
+        return interrupted ? "Stoped worker: " + workerName : "It is not posible stopper worker: " + workerName;
     }
 
-    @ShellMethod(key = "info")
-    public String info(String workerName) {
-
-        return "...";
+    @ShellMethod(key = "status", value = "Show status of a specific worker")
+    public String status(@ShellOption(defaultValue = ShellOption.NULL) String workerName) {
+        workerName = getWorkerName(workerName);
+        WorkerHolder holder = workers.get(workerName);
+        if (holder == null) {
+            return "Not started.";
+        }
+        WorkerStatus status = holder.getWorker().getStatus();
+        return status.getProgressInfo();
     }
 
+    @ShellMethod(key = "info", value = "Details about a specific worker")
+    public String info(@ShellOption(defaultValue = ShellOption.NULL) String workerName) {
+        workerName = getWorkerName(workerName);
+        WorkerHolder holder = workers.get(workerName);
+        if (holder == null) {
+            return "Not started.";
+        }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("Worker: ").append(workerName).append("\n");
+        sb.append("Active: ").append(holder.isActive()).append("\n");
+        sb.append("Started: ").append(holder.getStartedAt()).append("\n");
+        sb.append("Finished: ").append(holder.getFinishedAt()).append("\n");
+        sb.append("Status: ").append(holder.getWorker().getStatus().getProgressInfo()).append("\n");
+        Future<?> future = holder.getFuture();
+        if (future != null && future.isDone()) {
+            sb.append("Future state: done\n");
+        } else if (future != null) {
+            sb.append("Future state: running\n");
+        }
+        return sb.toString();
+    }
+
+    @ShellMethod(key = "list", value = "Show all available workers and their status")
+    public String list() {
+        StringBuilder sb = new StringBuilder();
+        for (String workerName : availableWorkers.keySet()) {
+            sb.append(workerName).append(": ").append(status(workerName)).append("\n");
+        }
+        return sb.toString();
+    }
 
 }
