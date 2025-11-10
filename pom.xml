@@ -13,28 +13,19 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>BioAnalyst</name>
     <description>BioAnalyst</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <properties>
         <java.version>25</java.version>
         <spring-shell.version>3.4.1</spring-shell.version>
+
+        <maven.compiler.showWarnings>false</maven.compiler.showWarnings>
+        <maven.compiler.showDeprecation>false</maven.compiler.showDeprecation>
+        <argLine>-Djdk.security.allowTerminallyDeprecatedClasses=true</argLine>
     </properties>
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.shell</groupId>-->
-<!--            <artifactId>spring-shell-starter</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.shell</groupId>
+            <artifactId>spring-shell-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -46,18 +37,20 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.shell</groupId>-->
-<!--            <artifactId>spring-shell-starter-test</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-
-
         <dependency>
-            <groupId>info.picocli</groupId>
-            <artifactId>picocli-spring-boot-starter</artifactId>
-            <version>4.7.7</version>
+            <groupId>org.springframework.shell</groupId>
+            <artifactId>spring-shell-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
+
+
+     <!-- https://mvnrepository.com/artifact/org.apache.camel/camel-univocity-parsers -->
+<dependency>
+    <groupId>org.apache.camel</groupId>
+    <artifactId>camel-univocity-parsers</artifactId>
+    <version>4.16.0</version>
+</dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -73,6 +66,28 @@
 
     <build>
         <plugins>
+
+
+            <!-- Za testove (surefire) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>${argLine}</argLine>
+                </configuration>
+            </plugin>
+
+            <!-- Za integracijske testove (failsafe) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>${argLine}</argLine>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

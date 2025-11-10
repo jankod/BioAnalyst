@@ -13,7 +13,16 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-5level %logger %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="hr.ja.ba" level="DEBUG"/>
+
+    <root level="INFO">
         <appender-ref ref="FILE"/>
+<!--        <appender-ref ref="CONSOLE"/>-->
     </root>
 </configuration>
