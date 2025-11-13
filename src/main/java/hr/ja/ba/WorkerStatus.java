@@ -2,6 +2,8 @@ package hr.ja.ba;
 
 import lombok.Data;
 
+import java.text.MessageFormat;
+
 @Data
 public class WorkerStatus {
 
@@ -11,9 +13,17 @@ public class WorkerStatus {
     private volatile long processed;
     private volatile long total;
     private volatile String message;
+    private volatile String result;
+
 
     public WorkerStatus(long id) {
         this.id = id;
+    }
+
+
+    public String toString() {
+        return MessageFormat.format("WorkerStatus id={0}, running={1}, cancelled={2}, processed={3}, total={4}, message=''{5}'', result=''{6}'' \n{7}",
+              id, running, cancelled, processed, total, message, result, getProgressInfo());
     }
 
     public String getProgressInfo() {

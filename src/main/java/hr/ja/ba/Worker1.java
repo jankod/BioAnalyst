@@ -3,6 +3,8 @@ package hr.ja.ba;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Random;
+
 /**
  * Demo worker that just sleeps and updates progress to showcase WorkerManager.
  */
@@ -11,19 +13,25 @@ import org.springframework.stereotype.Component;
 public class Worker1 extends AbstractWorker {
 
     @Override
-    protected void doWork() throws Exception {
-        log.info("Worker1 started working "+ getStatus().getId());
+    protected String doWork() throws Exception {
+        log.info("Worker1 started working {}", getStatus().getId());
         int totalSteps = 10;
         updateProgress(0, totalSteps, "Preparing");
 
         for (int i = 1; i <= totalSteps; i++) {
-            if (isCancelled()) {
-                return;
+            ensureRunning();
+            try {
+                Thread.sleep(200 + new Random().nextInt(800));
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                log.info("Worker1 interrupted during sleep {}", getStatus().getId());
+                throw WorkerStopSignal.interrupted();
             }
-            Thread.sleep(200);
-            updateProgress(i, totalSteps, "Step " + i + "/" + totalSteps);
+            updateProgress(i, "radim nesto");
         }
 
-        log.info("Worker1 finished working "+ getStatus().getId());
+        log.info("Worker1 finished working {}", getStatus().getId());
+
+        return "done";
     }
 }

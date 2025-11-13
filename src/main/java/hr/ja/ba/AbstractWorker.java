@@ -1,12 +1,14 @@
 package hr.ja.ba;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base helper for background workers so every worker reports progress in the same way.
  */
+@Slf4j
 public abstract class AbstractWorker implements Runnable {
 
     private final AtomicBoolean cancelRequested = new AtomicBoolean(false);
@@ -39,16 +41,37 @@ public abstract class AbstractWorker implements Runnable {
         status.setMessage(message);
     }
 
+    protected void updateProgress(long processed, String message) {
+        status.setProcessed(processed);
+        status.setMessage(message);
+    }
+
+    protected void ensureRunning() {
+        if (isCancelled()) {
+            throw WorkerStopSignal.cancelled();
+        }
+        if (Thread.currentThread().isInterrupted()) {
+            Thread.currentThread().interrupt();
+            throw WorkerStopSignal.interrupted();
+        }
+    }
+
     @Override
     public final void run() {
         status.setRunning(true);
         try {
-            doWork();
+            String result = doWork();
+            status.setResult(result);
             if (isCancelled()) {
                 status.setMessage("Cancelled");
             } else {
                 status.setMessage("Completed");
             }
+        } catch (WorkerStopSignal stopSignal) {
+            String reason = stopSignal.getReason();
+            status.setResult(reason);
+            status.setMessage(reason);
+            log.info("Worker {} stopped: {}", status.getId(), reason);
         } catch (Exception ex) {
             status.setMessage("Failed: " + ex.getMessage());
             throw new IllegalStateException("Worker failed", ex);
@@ -57,7 +80,6 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    protected abstract void doWork() throws Exception;
-
+    protected abstract String doWork() throws Exception;
 
 }

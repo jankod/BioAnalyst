@@ -3,16 +3,16 @@ package hr.ja.ba;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
-import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 import static org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME;
@@ -23,6 +23,7 @@ import static org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfi
 public class WorkerManager {
 
     private final Map<String, WorkerHolder> workers = new ConcurrentHashMap<>();
+    private final List<WorkerHolder> workersHistory = new CopyOnWriteArrayList<>();
 
     private final Map<String, AbstractWorker> availableWorkers;
 
@@ -49,6 +50,7 @@ public class WorkerManager {
                 worker.run();
             } finally {
                 holder.markFinished();
+                addToHistoryIfMissing(holder);
                 log.info("Worker {} finished.", workerName);
             }
         });
@@ -71,6 +73,21 @@ public class WorkerManager {
         return workerName;
     }
 
+    // show history of workers
+    @ShellMethod(key = "listh", value = "Show history of all workers")
+    public String history() {
+        StringBuilder sb = new StringBuilder();
+        for (WorkerHolder holder : workersHistory) {
+            sb.append("Worker: ").append(holder.getName()).append("\n");
+            sb.append("Started: ").append(MyUtil.format( holder.getStartedAt())).append("\n");
+            sb.append("Finished: ").append(holder.getFinishedAt()).append("\n");
+            sb.append("Status: ").append(holder.getWorker().getStatus().getProgressInfo()).append("\n");
+            sb.append("Result: ").append(holder.getWorker().getStatus().getResult()).append("\n");
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     @ShellMethod(key = "stop", value = "Stop a specific worker")
     public String stop(@ShellOption(defaultValue = ShellOption.NULL) String workerName) {
         workerName = getWorkerName(workerName);
@@ -81,8 +98,12 @@ public class WorkerManager {
 
         holder.getWorker().cancel();
         boolean interrupted = holder.getFuture().cancel(true);
+        if (interrupted) {
+            holder.markFinished();
+            addToHistoryIfMissing(holder);
+        }
         log.info("Stopped worker: {}", workerName);
-        return interrupted ? "Stoped worker: " + workerName : "It is not posible stopper worker: " + workerName;
+        return interrupted ? "Stopped worker: " + workerName : "It is not possible to stop worker: " + workerName;
     }
 
     @ShellMethod(key = "status", value = "Show status of a specific worker")
@@ -93,7 +114,7 @@ public class WorkerManager {
             return "Not started.";
         }
         WorkerStatus status = holder.getWorker().getStatus();
-        return status.getProgressInfo();
+        return status.toString();
     }
 
     @ShellMethod(key = "info", value = "Details about a specific worker")
@@ -128,4 +149,9 @@ public class WorkerManager {
         return sb.toString();
     }
 
+    private void addToHistoryIfMissing(WorkerHolder holder) {
+        if (!workersHistory.contains(holder)) {
+            workersHistory.add(holder);
+        }
+    }
 }
