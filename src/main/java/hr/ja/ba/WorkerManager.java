@@ -97,7 +97,8 @@ public class WorkerManager {
         }
 
         holder.getWorker().cancel();
-        boolean interrupted = holder.getFuture().cancel(true);
+        //    - **Preporuka**: Dodati timeout s vanjskim threadom koji će prisilno prekinuti
+        boolean interrupted = holder.getFuture().cancel(true );
         if (interrupted) {
             holder.markFinished();
             addToHistoryIfMissing(holder);

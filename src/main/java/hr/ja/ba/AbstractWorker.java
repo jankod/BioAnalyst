@@ -16,7 +16,7 @@ public abstract class AbstractWorker implements Runnable {
     @Getter
     private final WorkerStatus status = new WorkerStatus(WorkerIdGenerator.getNextId());
 
-    public void reset() {
+    public synchronized void reset() {
         cancelRequested.set(false);
         status.setRunning(false);
         status.setCancelled(false);
@@ -25,7 +25,7 @@ public abstract class AbstractWorker implements Runnable {
         status.setMessage("Pending");
     }
 
-    public void cancel() {
+    public synchronized void cancel() {
         cancelRequested.set(true);
         status.setCancelled(true);
         status.setMessage("Cancellation requested");
@@ -35,13 +35,13 @@ public abstract class AbstractWorker implements Runnable {
         return cancelRequested.get();
     }
 
-    protected void updateProgress(long processed, long total, String message) {
+    protected synchronized void updateProgress(long processed, long total, String message) {
         status.setProcessed(processed);
         status.setTotal(total);
         status.setMessage(message);
     }
 
-    protected void updateProgress(long processed, String message) {
+    protected synchronized void updateProgress(long processed, String message) {
         status.setProcessed(processed);
         status.setMessage(message);
     }
@@ -60,7 +60,7 @@ public abstract class AbstractWorker implements Runnable {
     public final void run() {
         status.setRunning(true);
         try {
-            String result = doWork();
+            WorkerResult result = doWork();
             status.setResult(result);
             if (isCancelled()) {
                 status.setMessage("Cancelled");
@@ -69,7 +69,7 @@ public abstract class AbstractWorker implements Runnable {
             }
         } catch (WorkerStopSignal stopSignal) {
             String reason = stopSignal.getReason();
-            status.setResult(reason);
+            status.setResult(new WorkerResult("Stopped: " + reason));
             status.setMessage(reason);
             log.info("Worker {} stopped: {}", status.getId(), reason);
         } catch (Exception ex) {
@@ -80,6 +80,6 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    protected abstract String doWork() throws Exception;
+    protected abstract WorkerResult doWork() throws Exception;
 
 }

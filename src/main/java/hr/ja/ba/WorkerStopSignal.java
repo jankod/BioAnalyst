@@ -1,8 +1,11 @@
 package hr.ja.ba;
 
+import lombok.Getter;
+
 /**
  * Internal stop signal used to unwind worker execution without treating it as an error.
  */
+@Getter
 public class WorkerStopSignal extends RuntimeException {
 
     private final String reason;
@@ -20,7 +23,4 @@ public class WorkerStopSignal extends RuntimeException {
         return new WorkerStopSignal("Interrupted");
     }
 
-    public String getReason() {
-        return reason;
-    }
 }

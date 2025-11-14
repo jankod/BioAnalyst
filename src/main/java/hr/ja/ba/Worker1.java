@@ -13,7 +13,7 @@ import java.util.Random;
 public class Worker1 extends AbstractWorker {
 
     @Override
-    protected String doWork() throws Exception {
+    protected WorkerResult doWork() throws Exception {
         log.info("Worker1 started working {}", getStatus().getId());
         int totalSteps = 10;
         updateProgress(0, totalSteps, "Preparing");
@@ -32,6 +32,6 @@ public class Worker1 extends AbstractWorker {
 
         log.info("Worker1 finished working {}", getStatus().getId());
 
-        return "done";
+        return new WorkerResult("Worker1 completed successfully.");
     }
 }

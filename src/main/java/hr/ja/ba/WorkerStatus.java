@@ -13,7 +13,7 @@ public class WorkerStatus {
     private volatile long processed;
     private volatile long total;
     private volatile String message;
-    private volatile String result;
+    private volatile WorkerResult result;
 
 
     public WorkerStatus(long id) {
