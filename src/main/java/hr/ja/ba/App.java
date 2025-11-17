@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @Slf4j
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "hr.ja")
 @EnableAsync
 
 public class App {
