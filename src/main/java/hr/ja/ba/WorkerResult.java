@@ -19,4 +19,7 @@ public class WorkerResult {
         this.resultMessage = resultMessage;
     }
 
+    public static WorkerResult cancelled() {
+        return new WorkerResult("Worker cancelled");
+    }
 }

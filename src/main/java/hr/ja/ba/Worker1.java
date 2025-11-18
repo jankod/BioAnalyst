@@ -18,7 +18,14 @@ public class Worker1 extends AbstractWorker {
         int totalSteps = 10;
         updateProgress(0, totalSteps, "Preparing");
 
+        if (isCancelled()) {
+            return WorkerResult.cancelled();
+        }
+
         for (int i = 1; i <= totalSteps; i++) {
+            if (isCancelled()) {
+                return WorkerResult.cancelled();
+            }
             ensureRunning();
             try {
                 Thread.sleep(200 + new Random().nextInt(800));
@@ -28,6 +35,10 @@ public class Worker1 extends AbstractWorker {
                 throw WorkerStopSignal.interrupted();
             }
             updateProgress(i, "radim nesto");
+
+            if (isCancelled()) {
+                return WorkerResult.cancelled();
+            }
         }
 
         log.info("Worker1 finished working {}", getStatus().getId());
