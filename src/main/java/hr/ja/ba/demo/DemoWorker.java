@@ -1,12 +1,11 @@
 package hr.ja.ba.demo;
 
-import hr.ja.ba.Worker;
-import hr.ja.ba.WorkerContext;
-import hr.ja.ba.WorkerResult;
+import hr.ja.ba.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DemoWorker implements Worker {
+@BioWorker(name = "Demo Worker", description = "A simple demo worker for testing purposes", version = "1.0")
+public class DemoWorker implements Worker, WorkerUI {
 
     @Override
     public WorkerResult run(WorkerContext context) {
@@ -34,5 +33,10 @@ public class DemoWorker implements Worker {
         log.debug("Finished demo worker");
 
         return new WorkerResult("Demo worker completed successfully.");
+    }
+
+    @Override
+    public WorkerInput createInput() {
+        return null;
     }
 }

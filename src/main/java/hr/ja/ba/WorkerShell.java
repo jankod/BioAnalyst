@@ -1,11 +1,25 @@
 package hr.ja.ba;
 
-import org.springframework.shell.command.annotation.Command;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
 
-@Command(command = "worker", description = "Worker related commands")
+@Slf4j
+@ShellComponent
+@RequiredArgsConstructor
 public class WorkerShell {
 
+    private final WorkerRegistry workerRegistry;
+
+    @ShellMethod(key = "list", value = "List all workers")
     public String list() {
-        return "Listing workers...";
+        return workerRegistry.findAll()
+                .stream()
+                .map(descriptor -> descriptor.name() + " - " + descriptor.description() + " (v" + descriptor.version() + ")")
+                .sorted()
+                .reduce((a, b) -> a + System.lineSeparator() + b)
+                .orElse("Nema registriranih workera.");
     }
+
 }
