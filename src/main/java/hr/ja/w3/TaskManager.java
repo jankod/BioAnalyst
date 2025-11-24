@@ -24,12 +24,13 @@ public class TaskManager {
      */
     public int runTask(Class<? extends BioTask> taskClass) {
 
+        return 0;
     }
 
     public void runTask(String taskId, BioTask task) {
         Future<?> future = executor.submit(() -> {
             // Ovdje se izvršava task.execute(input, context)
-            task.execute(input, context);
+            //task.execute(input, context);
         });
         runningTasks.put(taskId, future);
     }
