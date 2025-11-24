@@ -36,10 +36,10 @@ public class WorkerManager {
         completableFuture.whenComplete((result, throwable) -> {
             if (throwable != null) {
                 // Handle exception
-                System.err.println("Worker execution failed: " + throwable.getMessage());
+                log.debug("Worker execution failed: " + throwable.getMessage());
             } else {
                 // Process result
-                System.out.println("Worker completed with result: " + result);
+                log.debug("Worker completed with result: " + result);
             }
         });
 

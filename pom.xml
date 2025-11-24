@@ -16,7 +16,6 @@
     <properties>
         <java.version>25</java.version>
         <spring-shell.version>3.4.1</spring-shell.version>
-
         <maven.compiler.showWarnings>false</maven.compiler.showWarnings>
         <maven.compiler.showDeprecation>false</maven.compiler.showDeprecation>
         <argLine>-Djdk.security.allowTerminallyDeprecatedClasses=true -Djdk.attach.allowAttachSelf=true -XX:+EnableDynamicAgentLoading</argLine>
@@ -62,6 +61,19 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-batch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.batch</groupId>
+            <artifactId>spring-batch-test</artifactId>
             <scope>test</scope>
         </dependency>
 

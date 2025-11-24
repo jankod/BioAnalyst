@@ -4,8 +4,8 @@ import hr.ja.ba.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@BioWorker(name = "Demo Worker", description = "A simple demo worker for testing purposes", version = "1.0")
-public class DemoWorker implements Worker, WorkerUI {
+@BioWorker(name = "csv1", description = "Parse CSV for demo...", version = "1.0")
+public class CsvParserWorker implements Worker, WorkerUI {
 
     @Override
     public WorkerResult run(WorkerContext context) {
